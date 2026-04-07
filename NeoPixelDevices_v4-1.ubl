@@ -1,0 +1,227 @@
+module 'NeoPixelDevices_v4-1'
+author IowaDave
+version 4 1 
+depends _NeoPixel 
+choices NeoPixelDevices_types panel ring string 
+choices NeoPixelDevices_fieldnames type width height lock pixels 
+description 'Designed to enable several, separate NeoPixel devices to be daisy-chained physically for a combined visual display while easily managing the pixels on each device independently. The blocks in this library closely follow those provided in the NeoPixel library by MicroBlocks and NeoPanel library by José García Yeste & Víctor Casado. Grateful acknowledgment is due to John Maloney and the MicroBlocks developers along with Srs. Yeste and Casado.
+
+In general, the adaptation involved adding a device-specifier and certain other operations to the blocks, thus directing their action toward a record structure uniquely defined (as a list) for the device, rather than to operate on the _np_pixels list defined in the NeoPixel library.
+
+The methods of modeling a NeoPixel device as a record structure defined in a list, of converting field names into index numbers and of daisy-chaining multiple such device records for output to the physical NeoPixel devices, are the work of the author. Version dated 06April2026.'
+variables _NeoPixelDevices_fieldnamelist 
+
+  spec ' ' 'NeoPixelDevices_attach_devices' 'attach NeoPixel devices to pin _' 'num' 1
+  space
+  spec 'r' 'NeoPixelDevices_new_device' 'new neopixel device type _ width _ : height _' 'auto.NeoPixelDevices_types num num' 'ring' 1 1
+  spec ' ' 'NeoPixelDevices_display_devices' 'display neopixel devices in list _' 'auto' 'list of devices'
+  space
+  spec ' ' 'NeoPixelDevices_clear_device' 'clear device _' 'auto' 'device'
+  spec ' ' 'NeoPixelDevices_set Neopixel' 'set Neopixel _ of device _ _' 'num auto color' 1 'device'
+  spec ' ' 'NeoPixelDevices_set_device_all' 'set all Neopixels of device _ _' 'auto color' 'device'
+  spec ' ' 'NeoPixelDevices_rotate_device_pixels' 'rotate Neopixels of _ by _' 'auto num' 'device' 1
+  space
+  spec ' ' 'NeoPixelDevices_set_device_xycolor' 'set x _ y _ of _ _' 'num num auto color' 1 1 'device'
+  spec ' ' 'NeoPixelDevices_device_fill_column' 'fill column _ of device _ with _' 'num auto color' 1 'device'
+  spec ' ' 'NeoPixelDevices_device_fill_row' 'fill row _ of device _ with _' 'num auto color' 1 'device'
+  spec ' ' 'NeoPixelDevices_draw_line_device' 'draw line on _ from x _ y _ to x _ y _ color _' 'auto num num num num color' 'device' 1 1 1 1
+  spec ' ' 'NeoPixelDevices_device_rectangle' 'draw rectangle on _ at x _ y _ width _ height _ color _ : filled _' 'auto num num num num color bool' 'device' 1 1 1 1
+  spec ' ' 'NeoPixelDevices_device_circle' 'draw circle on _ at x _ y _ radius _ color _ : filled _' 'auto num num num color bool' 'device' 1 1 1
+  space
+  spec 'r' 'NeoPixelDevices_get_field_contents' 'field _ of device _' 'auto.NeoPixelDevices_fieldnames auto' 'type' 'device'
+  spec ' ' 'NeoPixelDevices_wait_for' 'wait for _' 'auto' 'device'
+  spec ' ' 'NeoPixelDevices_lock_device' 'lock device _' 'auto' 'device'
+  spec ' ' 'NeoPixelDevices_unlock_device' 'unlock device _' 'auto' 'device'
+  space
+  spec ' ' '_NeoPixelDevices_set_pixel_of_device' '_set pixel _ _ _' 'num auto color' 1 'device'
+  spec 'r' '_NeoPixelDevices_nxn_device_pixel_index' '_nxn_device_pixel_index _ _ _' 'num num auto' 1 1 'device'
+  spec ' ' '_NeoPixelDevices_drawLine_device' '_drawLine_device _ _ _ _ _ _' 'auto num num num num color' 'device' 1 1 1 1
+  space
+  spec 'r' '_NeoPixelDevices_fieldnumber' '_field _' 'auto.NeoPixelDevices_fieldnames' 'type'
+
+to NeoPixelDevices_attach_devices pin {
+  neoPixelAttach 1 pin
+  comment 'initialize the field name list for looking up corresponding item number'
+  _NeoPixelDevices_fieldnamelist = ('[data:split]' 'type,width,height,lock,pixels' ',')
+}
+
+to NeoPixelDevices_clear_device device {
+  atPut 'all' (at ('_NeoPixelDevices_fieldnumber' 'pixels') device) 0
+}
+
+to NeoPixelDevices_device_circle device x0 y0 radius color optionalFilled {
+  comment 'Bresenham circle algorithm'
+  local 'filled' (argOrDefault 6 (booleanConstant true))
+  local 'x' (-1 * radius)
+  local 'y' 0
+  local 'error' (2 - (2 * radius))
+  repeatUntil (x >= 0) {
+    if filled {
+      '_NeoPixelDevices_drawLine_device' device (x0 - x) (y0 + y) (x0 + x) (y0 + y) color
+      '_NeoPixelDevices_drawLine_device' device (x0 + y) (y0 + x) (x0 - y) (y0 + x) color
+    } else {
+      '_NeoPixelDevices_set_pixel_of_device' ('_NeoPixelDevices_nxn_device_pixel_index' (x0 - x) (y0 + y) device) device color
+      '_NeoPixelDevices_set_pixel_of_device' ('_NeoPixelDevices_nxn_device_pixel_index' (x0 - y) (y0 - x) device) device color
+      '_NeoPixelDevices_set_pixel_of_device' ('_NeoPixelDevices_nxn_device_pixel_index' (x0 + x) (y0 - y) device) device color
+      '_NeoPixelDevices_set_pixel_of_device' ('_NeoPixelDevices_nxn_device_pixel_index' (x0 + y) (y0 + x) device) device color
+    }
+    radius = error
+    if (radius <= y) {
+      y += 1
+      error = (error + ((y * 2) + 1))
+    }
+    if (or (radius > x) (error > y)) {
+      x += 1
+      error = (error + ((x * 2) + 1))
+    }
+  }
+}
+
+to NeoPixelDevices_device_fill_column col device color {
+  '_NeoPixelDevices_drawLine_device' device col 1 col (at ('_NeoPixelDevices_fieldnumber' 'height') device) color
+}
+
+to NeoPixelDevices_device_fill_row row device color {
+  '_NeoPixelDevices_drawLine_device' device 1 row (at ('_NeoPixelDevices_fieldnumber' 'width') device) row color
+}
+
+to NeoPixelDevices_device_rectangle device col row width height color optionalFilled {
+  local 'filled' (argOrDefault 7 (booleanConstant true))
+  if (and (width > 0) (height > 0)) {
+    comment 'first line'
+    '_NeoPixelDevices_drawLine_device' device col row (col + (width - 1)) row color
+    row += 1
+    if (height > 1) {
+      comment 'intermediate lines'
+      repeat (height - 2) {
+        if filled {
+          '_NeoPixelDevices_drawLine_device' device col row (col + (width - 1)) row color
+        } else {
+          '_NeoPixelDevices_set_pixel_of_device' ('_NeoPixelDevices_nxn_device_pixel_index' (col + (width - 1)) row device) device color
+          '_NeoPixelDevices_set_pixel_of_device' ('_NeoPixelDevices_nxn_device_pixel_index' col row device) device color
+        }
+        row += 1
+      }
+      comment 'last line'
+      '_NeoPixelDevices_drawLine_device' device col row (col + (width - 1)) row color
+    }
+  }
+}
+
+to NeoPixelDevices_display_devices device_list {
+  _np_pixels = (newList 0)
+  for i device_list {
+    _np_pixels = ('[data:join]' _np_pixels (at ('_NeoPixelDevices_fieldnumber' 'pixels') i))
+  }
+  '_NeoPixel_update'
+}
+
+to NeoPixelDevices_draw_line_device device x0 y0 x1 y1 color {
+  '_NeoPixelDevices_drawLine_device' device x0 y0 x1 y1 color
+}
+
+to NeoPixelDevices_get_field_contents field device {
+  return (at ('_NeoPixelDevices_fieldnumber' field) device)
+}
+
+to NeoPixelDevices_lock_device device {
+  atPut ('_NeoPixelDevices_fieldnumber' 'lock') device (booleanConstant true)
+}
+
+to NeoPixelDevices_new_device type width optionalheight {
+  local 'height' (argOrDefault 3 1)
+  comment 'The object to be returned will contain a list
+of different information items about the device
+along with a buffer to contain the color information
+for each neopixel on the device.'
+  local 'device' (newList 0)
+  '[data:addLast]' type device
+  '[data:addLast]' width device
+  '[data:addLast]' height device
+  comment 'item 4 below serves as a device-busy flag'
+  '[data:addLast]' (booleanConstant false) device
+  comment 'The last item is the data buffer, 
+implemented as a list having
+the number of items equal to the number
+of neopixels on the device.'
+  '[data:addLast]' (newList (width * height)) device
+  return device
+}
+
+to NeoPixelDevices_rotate_device_pixels device steps {
+  local 'buffer' (at ('_NeoPixelDevices_fieldnumber' 'pixels') device)
+  for i steps {
+    '[data:addLast]' (at 1 buffer) buffer
+    '[data:delete]' 1 buffer
+  }
+}
+
+to 'NeoPixelDevices_set Neopixel' i device color {
+  '_NeoPixelDevices_set_pixel_of_device' i device color
+}
+
+to NeoPixelDevices_set_device_all device foo {
+  atPut 'all' (at ('_NeoPixelDevices_fieldnumber' 'pixels') device) foo
+}
+
+to NeoPixelDevices_set_device_xycolor col row device color {
+  '_NeoPixelDevices_set_pixel_of_device' ('_NeoPixelDevices_nxn_device_pixel_index' col row device) device color
+}
+
+to NeoPixelDevices_unlock_device device {
+  atPut ('_NeoPixelDevices_fieldnumber' 'lock') device (booleanConstant false)
+}
+
+to NeoPixelDevices_wait_for panel {
+  repeatUntil (not (at ('_NeoPixelDevices_fieldnumber' 'lock') panel)) nil
+}
+
+to '_NeoPixelDevices_drawLine_device' panel x0 y0 x1 y1 color {
+  comment 'Bresenham''s Line Algorithm'
+  local 'dx' (absoluteValue (x1 - x0))
+  local 'dy' (0 - (absoluteValue (y1 - y0)))
+  if (dy == 0) {
+    for x ('[data:range]' x0 x1) {
+      comment 'nplib: _NeoPanel_setPixel x y0 color'
+      NeoPixelDevices_set_device_xycolor x y0 panel color
+    }
+  } (dx == 0) {
+    for y ('[data:range]' y0 y1) {
+      comment 'nplib: _NeoPanel_setPixel x0 y color'
+      NeoPixelDevices_set_device_xycolor x0 y panel color
+    }
+  } else {
+    local 'error' (dx + dy)
+    local 'sx' (ifExpression (x0 < x1) 1 -1)
+    local 'sy' (ifExpression (y0 < y1) 1 -1)
+    forever {
+      comment 'nplib: _NeoPanel_setPixel x0 y0 color'
+      NeoPixelDevices_set_device_xycolor x0 y0 panel color
+      local 'e2' (error * 2)
+      if (e2 >= dy) {
+        if (x0 == x1) {exitLoop}
+        error += dy
+        x0 += sx
+      }
+      if (e2 <= dx) {
+        if (y0 == y1) {exitLoop}
+        error += dx
+        y0 += sy
+      }
+    }
+  }
+}
+
+to '_NeoPixelDevices_fieldnumber' fieldname {
+  comment 'report item number corresponding to field name'
+  return ('[data:find]' fieldname _NeoPixelDevices_fieldnamelist)
+}
+
+to '_NeoPixelDevices_nxn_device_pixel_index' col row device {
+  if (and (and (col > 0) (row > 0)) (and (col <= (at ('_NeoPixelDevices_fieldnumber' 'width') device)) (row <= (at ('_NeoPixelDevices_fieldnumber' 'height') device)))) {return (((((row / 2) * ((at ('_NeoPixelDevices_fieldnumber' 'height') device) * 2)) - col) + (((row % 2) * 2) * col)) + (1 - (row % 2)))}
+}
+
+to '_NeoPixelDevices_set_pixel_of_device' index device color {
+  if (and (1 <= index) (index <= (size (at ('_NeoPixelDevices_fieldnumber' 'pixels') device)))) {atPut index (at ('_NeoPixelDevices_fieldnumber' 'pixels') device) color}
+}
+
