@@ -196,7 +196,7 @@ The code writer is responsible to ensure that the column and row number inputs a
 #### Which Way Do the Columns and Rows Lay Out?
 You will notice that the blocks refer to the columns and rows generically as *x* and *y*. The reason is due to the way the NeoPixels are laid out on these devices. 
 
-Pixel #1 is at one of the corners and has the coordinates (x-1, y=1). Pixel #2 is adjacent to it. On a typical, commonly found, *serpentine* NeoPixel panel, it has the coordinates (x=1, y=2). 
+Pixel #1 is at one of the corners and has the coordinates (x=1, y=1). Pixel #2 is adjacent to it. On a typical, commonly found, *serpentine* NeoPixel panel, it has the coordinates (x=1, y=2). 
 
 Now, when you light up Pixel #2 and look at it, will it appear at (column 2, row 1)? Or instead will it be seen at (column 1, row 2)?
 
@@ -232,7 +232,7 @@ Again, whether the result looks like a row, and not a column, depends upon the p
 
 ![image of the *draw line* block](block_images/draw_line.png)
 
-Approximate a straight line of the chosen color on the specified device from the NeoPixel at one set of (x,y) coordinates to the other set.
+Approximate a straight line of the chosen color on the specified device from the NeoPixel at one set of (*x*,*y*) coordinates to the other set.
 
 ---
 
@@ -240,9 +240,9 @@ Approximate a straight line of the chosen color on the specified device from the
 
 ![image of the *draw rectangle with filled option* block](block_images/draw_rectangle_with_option.png)
 
-Draw a rectangle on the specified device using the chosen color, starting at the given (x,y) coordinate positon. 
+Draw a rectangle on the specified device using the chosen color, starting at the given (*x*,*y*) coordinate positon. 
 
-*x* and *y* coordinates for the other NeoPixels within the rectangle increase from the given x and y positions. 
+*x* and *y* coordinates for the other NeoPixels within the rectangle increase from the given *x* and *y* positions. 
 
 The code writer is responsible to ensure that values obtained by adding width and height to the given x and y positions remain withing a suitable range for the device.
 
@@ -254,9 +254,9 @@ Extending the block reveals an optional setting to fill the rectangle with the c
 
 ![image of the *draw circle with filled option* block](block_images/draw_circle_with_option.png)
 
-Draw a circle on the specified device using the chosen color, placing the origin (center) at the given (x,y) coordinate positon.
+Draw a circle on the specified device using the chosen color, placing the origin (center) at the given (*x*,*y*) coordinate positon.
 
-*x* and *y* coordinates for the other NeoPixels within the circle both increase and decrease from the given x and y positions. 
+*x* and *y* coordinates for the other NeoPixels within the circle both increase and decrease from the given *x* and *y* positions. 
 
 The code writer is responsible to ensure that values obtained by adding and subtracting the radius will remain suitable for the device.
 
@@ -273,6 +273,10 @@ This block reports the contents of a named data field in the specified device re
 ![image of the *wait* block](block_images/wait.png)
 
 This block and the two that follow below are designed to help a program writer avoid data corruption in concurrent (that is, multitasking) program designs. 
+
+This block pauses execution of a script when it finds the specified object to be locked, indicating another script is using the object.
+
+Execution is allowed to resume after the other script unlocks the object. 
 
 See [Locking a Data Object](#locking-a-data-object-for-concurrent-execution)
 
@@ -298,21 +302,23 @@ This setting indicates that no script is using the object, implying that the dev
 
 The idea is to regulate the execution of the program in such a way that only one script will access a data object at any given time. 
 
-Data corruption can occur when one script starts writing data to an object while another script is reading the object, or if both scripts are trying to write the data simultaneously.
+Data corruption can occur when one script starts writing data to an object while another script is reading the object, or when more than one script writes to the data object simultaneously.
 
 *Locking* a data object is one way to guard against such situations.
 
-This block pauses execution of a script when it finds the specified object to be locked, indicating another script is using the object.
+It is a *cooperative* technique. MicroBlocks will not prevent a program from writing to a data object that happens to have a *lock flag* set to *true* in this way. 
 
-Execution is allowed to resumes after the other script unlocks the object. 
+The technique works only when all of the scripts in the program abide by the *lock* settings 
 
-See the *concurrent processing* example. The program sets up a chain of two devices and defines a graphical object to animate on each of them. Then it launches three, separate scripts that run concurrently:
+It means the programmer has to design concurrent scripts so that they properly set, clear and respect *lock* flags that the programmer has provided to protect critical data. 
 
-* draw on the panel every 127 milliseconds
-* draw on the ring every 179 milliseconds
+See the *concurrent processing* example. The program sets up a chain of two devices and defines a graphical sprite (the &ldquo;snake&rdquo;) to animate on each of them. Then it launches three, separate scripts that run concurrently:
+
+* draw the snake at a new position on the panel every 127 milliseconds
+* draw on the snake at a new position on the ring every 179 milliseconds
 * display both the panel and the ring every 79 milliseconds
 
-From time to time one of the scripts will pause while one of the device data records remains locked by another script. Yet, the animation proceeds smoothly and the graphical object always appears correctly on both devices.
+From time to time one of the scripts will probably have to pause while one of the device data records remains locked by another script. Yet, the animation proceeds smoothly and the snake slithers along its way correctly on both devices.
 
 
 ## Examples
