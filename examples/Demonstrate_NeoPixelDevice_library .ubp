@@ -36,10 +36,10 @@ NeoPixelDevices_draw_line_device Panel8x8 7 5 5 7 (colorSwatch 255 231 73 255)
 NeoPixelDevices_draw_line_device Panel8x8 1 8 8 1 (colorSwatch 221 255 229 255)
 comment 'Make the circle prettier.'
 for i ('[data:range]' 1 12) {
-  'NeoPixelDevices_set Neopixel' i Ring (colorFromRGB (i * 18) (255 - (18 * i)) (255 - (18 * i)))
+  'NeoPixelDevices_set NeoPixel' i Ring (colorFromRGB (i * 18) (255 - (18 * i)) (255 - (18 * i)))
 }
 for i ('[data:range]' 13 24) {
-  'NeoPixelDevices_set Neopixel' i Ring (colorFromRGB (234 - ((i - 12) * 18)) (21 + (18 * (i - 12))) (21 + (18 * (i - 12))))
+  'NeoPixelDevices_set NeoPixel' i Ring (colorFromRGB (234 - ((i - 12) * 18)) (21 + (18 * (i - 12))) (21 + (18 * (i - 12))))
 }
 comment 'Show your work.'
 NeoPixelDevices_display_devices DeviceList
@@ -314,9 +314,9 @@ to setNeoPixelColors25 c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12 c13 c14 c15 c16 c1
 }
 
 
-module 'NeoPixelDevices_v4-1'
+module 'NeoPixelDevices_v4-2'
 author IowaDave
-version 4 1 
+version 4 2 
 depends _NeoPixel 
 choices NeoPixelDevices_types panel ring string 
 choices NeoPixelDevices_fieldnames type width height lock pixels 
@@ -329,13 +329,13 @@ variables _NeoPixelDevices_fieldnamelist
 
   spec ' ' 'NeoPixelDevices_attach_devices' 'attach NeoPixel devices to pin _' 'num' 1
   space
-  spec 'r' 'NeoPixelDevices_new_device' 'new neopixel device type _ width _ : height _' 'auto.NeoPixelDevices_types num num' 'ring' 1 1
-  spec ' ' 'NeoPixelDevices_display_devices' 'display neopixel devices in list _' 'auto' 'list of devices'
+  spec 'r' 'NeoPixelDevices_new_device' 'new NeoPixel device type _ width _ : height _' 'auto.NeoPixelDevices_types num num' 'ring' 1 1
+  spec ' ' 'NeoPixelDevices_display_devices' 'display NeoPixel devices in list _' 'auto' 'list of devices'
   space
   spec ' ' 'NeoPixelDevices_clear_device' 'clear device _' 'auto' 'device'
-  spec ' ' 'NeoPixelDevices_set Neopixel' 'set Neopixel _ of device _ _' 'num auto color' 1 'device'
-  spec ' ' 'NeoPixelDevices_set_device_all' 'set all Neopixels of device _ _' 'auto color' 'device'
-  spec ' ' 'NeoPixelDevices_rotate_device_pixels' 'rotate Neopixels of _ by _' 'auto num' 'device' 1
+  spec ' ' 'NeoPixelDevices_set NeoPixel' 'set NeoPixel _ of device _ _' 'num auto color' 1 'device'
+  spec ' ' 'NeoPixelDevices_set_device_all' 'set all NeoPixels of device _ _' 'auto color' 'device'
+  spec ' ' 'NeoPixelDevices_rotate_device_pixels' 'rotate NeoPixels of _ by _' 'auto num' 'device' 1
   space
   spec ' ' 'NeoPixelDevices_set_device_xycolor' 'set x _ y _ of _ _' 'num num auto color' 1 1 'device'
   spec ' ' 'NeoPixelDevices_device_fill_column' 'fill column _ of device _ with _' 'num auto color' 1 'device'
@@ -449,7 +449,7 @@ to NeoPixelDevices_new_device type width optionalheight {
   comment 'The object to be returned will contain a list
 of different information items about the device
 along with a buffer to contain the color information
-for each neopixel on the device.'
+for each NeoPixel on the device.'
   local 'device' (newList 0)
   '[data:addLast]' type device
   '[data:addLast]' width device
@@ -459,7 +459,7 @@ for each neopixel on the device.'
   comment 'The last item is the data buffer, 
 implemented as a list having
 the number of items equal to the number
-of neopixels on the device.'
+of NeoPixels on the device.'
   '[data:addLast]' (newList (width * height)) device
   return device
 }
@@ -472,7 +472,7 @@ to NeoPixelDevices_rotate_device_pixels device steps {
   }
 }
 
-to 'NeoPixelDevices_set Neopixel' i device color {
+to 'NeoPixelDevices_set NeoPixel' i device color {
   '_NeoPixelDevices_set_pixel_of_device' i device color
 }
 

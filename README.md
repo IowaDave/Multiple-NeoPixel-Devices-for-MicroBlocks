@@ -1,7 +1,7 @@
-# Multiple-Neopixel-Devices-for-MicroBlocks
+# Multiple-NeoPixel-Devices-for-MicroBlocks
 Daisy-chain several NeoPixel devices in series and control each device independently by name.
 
-*How nice would it be to control two or three NeoPixel rings or panels, each independently from the others, using just one microcontroller?*
+*How nice would it be to control two or more NeoPixel rings or panels, each independently from the others, using just one microcontroller?*
 
 [MicroBlocks](https://microblocks.fun/) is a graphical-blocks language for programming microcontrollers. Its creators have played significant roles in developing the [Scratch](https://scratch.mit.edu/) and [Snap!](https://snap.berkeley.edu/) languages at MIT and at Berkeley, respectively. They know how to write a language.
 
@@ -16,34 +16,106 @@ The *NeoPixel* and *NeoPanel* libraries that come included by default with Micro
 
 This project introduces a library that builds upon and extends those libraries to enable connecting and managing multiple NeoPixel devices.
 
+How many devices can be chained together this way? It depends on the number and sizes of the devices and on the available memory in the microcontroller. The example illustrated here, using two devices, was tested with a MakerPort.
+
 ## Contents
 * [Using the Library](#using-the-library)
-* [Programming Concepts](#programming-concepts-of-the-library)
 * [Blocks Reference](#blocks-reference)
 * [Examples](#examples)
+* [Programming Concepts](#programming-concepts-of-the-library)
 
 ## Using the Library
-Download the library onto your computer from this repository. Its name is [NeoPixelDevices_v4-1.ubl](NeoPixelDevices_4-1.ubl).
+
+### Installation
+Download the library onto your computer from this repository. Its name is [NeoPixelDevices_v4-2.ubl](NeoPixelDevices_4-2.ubl).
 
 Launch MicroBlocks, using one of the methods explained on the [web site for the language](https://microblocks.fun).
 
 Follow instructions given on the web site to connect a microcontroller and to install the MicroBlocks firmware onto it.
 
+### Add the Library to a New Program
+
 Start a new program. Look for the *Add Library* link. Click it, choose Computer as the location of the library, navigate to where you stored this library, select it and click, **Open**.
 
-Look to see whether the standard *Neopixel* library also loads, automatically. If it does not, then take a moment to add that one also to your program.
+Look to see whether the standard *NeoPixel* library also loads, automatically. If it does not, then take a moment to add that one also to your program.
 
 At a minimum, you want your **Libraries** palette to include these two graphical objects:
 
 ![image showing two library objects on the screen](block_images/library_palettes.png)
 
-Having those two libraries installed, a typical way to initialize a MicroBlocks program for two or more NeoPixel devices could look like the example shown below as **Listing 1**.
+### First Steps
+
+Having those two libraries installed, a typical way to initialize a MicroBlocks program for a chain of two NeoPixel devices could look like the example shown below as **Listing 1**.
 
 ![Example of a MicroBlocks code listing](block_images/when_started.png)<br>**Listing 1:** Initialization
+
+Look more closely at these instructions. The first green block tells MicroBlocks to transmit signals to the chain of devices through I/O pin number 15.
+
+### Assign Names to Your Devices
+
+Create a variable name for each device in the chain. It is a good idea to choose descriptive names, because it makes the code easier for humans to read and to understand. 
+
+&ldquo;Panel_8x8&rdquo; and &ldquo;Ring_24&rdquo; in **Listing 1**, above, are variable names that would serve well for an 8-by-8 NeoPixel panel and for a 24-NeoPixel ring device, respectively. 
+
+The next, two blocks in **Listing 1** initialize each of the variables to contain a *data record* with distinct information specific to each device. 
+
+For example, the block shown below configures the data record stored in the &ldquo;Panel_8x8&rdquo; variable to work with a NeoPixel panel having eight rows of eight NeoPixels each: 
+
+![image of *set variable* block setting a variable to contain a panel device data record](block_images/set_variable_to_panel.png)
+
+Using named variables to contain different data records for each of the different devices enables a program to access the different devices individually, by name.
+
+In the discussion that follows, the phrase &ldquo;data record&rdquo; will refer to the variable that contains information about a particular NeoPixel device. 
+
+### Make a List of Your Devices
+
+After naming variables to represent the devices and preparing their initial data records, your program will need to create a list representing the entire chain of NeoPixel devices attached to the microcontroller.
+
+In **Listing 1**, a variable named *DeviceChain* is set to contain a list of the data records for the two devices, as follows:
+
+![image of block setting up a list of device data records](block_images/chain_list.png)
+
+The order is important. Notice that the record for *Panel_8x8* comes first. It is worth repeating the reason why, for emphasis.
+
+The first device record in the list should represent the physical device actually connected to the microcontroller. Other blocks in the library depend on things being set up this way. 
+
+For the arrangement shown in this example to work right, that physical 8x8 panel should be the device attached to the controller.
+
+Then the other data records follow in the same order as the devices follow outward from the controller in the physical chain.
+
+### Draw Onto a Named Device 
+
+All of the blocks for manipulating NeoPixels on a device take the corresponding variable name for the device as one of their inputs. 
+
+Using the name allows a program to change NeoPixels on one device without affecting the others.
+
+For example, building upon the initialization shown in **Listing 1**, draw a solid, green square in the center of the 8x8 NeoPixel panel.
+
+![image of a MicroBlocks code block for drawing a rectangle](block_images/example_rectangle.png)
+
+You can draw many times into a device without immediately affecting its visual presentation.
+
+Delaying the display empowers a program to prepare complex visual presentations without having each drawing step appear right away.
+
+### Display New Drawing Whenever You Choose
+
+When the program is ready to display changes, a single block updates all of devices in the chain by working through the list of device data records. For example, display the devices in the *DeviceChain* list:
+
+![image of a MicroBlocks program block to display the chain of devices](block_images/example_display.png)
 
 [back to Contents](#contents)
 
 ## Programming Concepts of the Library
+This part explains how the *NeoPixelDevices* library works. You can skip over it if you just want to play with the blocks. Come back later to learn more.
+
+But wait.
+
+Before you go, there is one thing you should know about those data records. Each record keeps track of several, different pieces of information about a NeoPixel device. The discussion that follows will refer to each of those pieces of information as a *field*. 
+
+For example, the number of NeoPixels in one &ldquo;row&rdquo; on a panel is stored in a field named *width*. The number of &ldquo;rows&rdquo; is kept in a field named *height*. If the device is a ring or a strand of NeoPixels, then it has only one &ldquo;row&rdquo;, and the *height* field would be set to 1 by default. 
+
+OK, you can safely [skip ahead to the blocks reference](#blocks-reference) now, if you wish.
+
 The *NeoPixelDevices* library takes advantage of how easy it is to use Lists in MicroBlocks.
 
 The List data type in MicroBlocks can contain an arbitrary (and changeable) number of data items, and the data items can be any of the types supported by MicroBlocks, including:
@@ -60,61 +132,15 @@ Each physical NeoPixel device is represented in this library by a list of five d
 4. a Boolean "lock" flag that can come in handy during concurrent processing, and finally 
 5. a list serving as a buffer to hold each and all of the individual NeoPixel color values for the WS2811 LEDs on the device.
 
-Importantly, keeping all five of these data items, or *fields*, together in a single list makes it possible to assign them as a group to a single, named variable. 
+Importantly, keeping all five of these data items, or *fields*, together in a single list makes it possible to assign them as a group, as a *data record* to be stored in a single, named variable. 
 
-In this way, a program is able to refer to the devices by name. It is similar to the concept of a *struct* or a *record* in some other languages, though not quite.
+Behind the scenes, the *NeoPixelDevices* library maintains a list of names for these different fields. It uses this list to figure out how to look up a value in a device data record by name. 
 
-The library provides a *new neopixel device* block which takes care of setting up all five of the *fields* in one of these device data lists.
+In this way, a program is able to use names for everything.  It can refer &mdash; by name &mdash; both to the devices and to the different fields of data for each device. It is similar to the concept of a *struct* or a *record* in some other languages, though not quite.
 
-Combining that block with the standard, built-in *set* block of MicroBlocks, the device data list can be stored in a named variable. 
+The library provides a *new NeoPixel device* block which takes care of setting up all five of the *fields* in one of these device data lists.
 
-**Listing 1** displays two examples of setting a named variable to contain a device data list. Here is another look at one of those instructions.
-
-![image of *set variable* block setting a variable to contain a panel device data record](block_images/set_variable_to_panel.png)
-
-The library enables a program to access these different data &ldquo;fields&rdquo; by name. 
-
-Staying with the **Listing 1** program example, a subroutine could initialize a local variable and set its value to the number of pixels on the NeoPixel ring named *Ring_24* this way:
-
-![image of a MicroBlocks program block](block_images/get_width.png)
-
-Remember that a MicroBlocks List can contain other lists as its data items. Using that convenient feature, the program can create a list representing the entire chain of NeoPixel devices attached to the microcontroller.
-
-In **Listing 1**, a variable named *DeviceChain* is set to contain a list of the data records for two devices. 
-
-Look at the block again,
-
-![image of block setting up a list of device data records](block_images/chain_list.png)
-
-The order is important. Notice that the record for *Panel_8x8* comes first. It is worth repeating the reason why, for emphasis.
-
-The first device record in the list should represent the physical device actually connected to the microcontroller. Other blocks in the library depend on things being set up this way. 
-
-For the arrangement shown in this example to work right, that physical 8x8 panel should be the device attached to the controller.
-
-Then the other data records follow in the same order as the devices follow outward from the controller in the physical chain.
-
----
-
-All of the blocks for manipulating NeoPixels on a device take the device record as one of their inputs. 
-
-Having a separate data record for each device in a chain makes it possible to draw on one device without affecting the others.
-
-For example, building upon the initialization shown in **Listing 1**, draw a solid, green square in the center of the 8x8 NeoPixel panel.
-
-![image of a MicroBlocks code block for drawing a rectangle](block_images/example_rectangle.png)
-
-You can draw many times into a device without affecting its visual presentation. 
-
-Most of these *NeoPixelDevices* blocks serve to prepare a device for viewing but do not display it. There is a good reason.
-
-Delaying the display empowers a program to prepare complex visual presentations without having each drawing step appear immediately.
-
-When the devices are ready for display, a single block updates all of them by working through the list of device data records. For example, display the devices in the *DeviceChain* list:
-
-![image of a MicroBlocks program block to display the chain of devices](block_images/example_display.png)
-
-[back to Contents](#contents)
+Combining that block with the standard, built-in *set* block of MicroBlocks, the device data record becomes stored in a named variable. 
 
 ## Blocks Reference
 The blocks are listed in the Palette area of the MicroBlocks editing window. 
@@ -181,7 +207,7 @@ This block is typically used to erase previous drawing instructions from the dev
 
 ---
 
-![image of *set neopixel* block](block_images/set_neopixel.png)
+![image of *set NeoPixel* block](block_images/set_neopixel.png)
 
 Sets the specified NeoPixel number to the given color. The block is mostly useful for one-dimensional ring-shaped devices and for strings of NeoPixels.
 
@@ -356,6 +382,10 @@ Comments in the programs provide some documentation about what is going on.
 
 Closer study of the code is left as an exercise for the reader.
 
+The reader may notice that the names given to the variables holding data records for the devices are slightly different from one example to the next. This variation was done on purpose for the following reason.
+
+While the names aim to be *descriptive* for the devices in each example, it is important to recognize that there is no magic in the name of the variable. The *NeoPixelDevices* library takes no information from the name of a variable. It looks only at the information that is written into the fields of the data record stored in the variable.
+
 I expect to write more about the examples. Please consider checking back here from time to time.
 
-[back to top](#multiple-neopixel-devices-for-microblocks)
+[back to top](#multiple-NeoPixel-devices-for-microblocks)
